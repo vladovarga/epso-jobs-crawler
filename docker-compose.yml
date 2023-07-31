@@ -1,0 +1,28 @@
+version: "3.7"
+services:
+  epso-jobs-crawler:
+    build: .
+    environment:
+      # define your own environment variables via .env file
+
+      URL_TO_CRAWL: ${URL_TO_CRAWL}
+
+      # AWS
+      AWS_REGION: ${AWS_REGION}
+      AWS_BUCKET: ${AWS_BUCKET}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+
+      # where the raw downloaded .html files will be stored
+      DOWNLOADS_PATH: ${DOWNLOADS_PATH}
+
+      # Postgres DB settings
+      PG_HOST: ${PG_HOST}
+      # PG_HOST: host.docker.internal
+      PG_DATABASE: ${PG_DATABASE}
+      PG_USERNAME: ${PG_USERNAME}
+      PG_PASSWORD: ${PG_PASSWORD}
+    restart: unless-stopped
+    ports:
+      - "9999:8080"
+  
