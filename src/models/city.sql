@@ -8,7 +8,8 @@ CREATE TABLE IF NOT EXISTS public.cities
     code text NOT NULL,
     name text NOT NULL,
     country text,
-    CONSTRAINT cities_pkey PRIMARY KEY (id)
+    CONSTRAINT cities_pkey PRIMARY KEY (id),
+    CONSTRAINT cities_code_ukey UNIQUE (code)
 );
 
 -- <option value="(\d+)">([^(]*)\((.*)\)</option>
@@ -19,6 +20,7 @@ INSERT INTO cities (id, name, code, country) VALUES
 (5358, 'Limerick', LOWER('Limerick'), 'Ireland'),
 (5357, 'Mariager', LOWER('Mariager'), 'Denmark'),
 (5569, 'Marseille', LOWER('Marseille'), 'France'),
+(5658, 'Zagreb', LOWER('Zagreb'), 'Croatia'),
 (1171, 'Alicante', LOWER('Alicante'), 'Spain'),
 (1218, 'Amsterdam', LOWER('Amsterdam'), 'The Netherlands'),
 (1175, 'Angers', LOWER('Angers'), 'France'),
