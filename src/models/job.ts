@@ -1,6 +1,8 @@
+const os = require("os");
+
 import { DataTypes, Model } from 'sequelize';
 import { sequelizeInstance } from '../inits/sequelize'
-import { City } from './city'
+import { env } from '../env'
 
 export class Job extends Model {
     /**
@@ -31,23 +33,44 @@ export class Job extends Model {
     /**
      * Save new job positions into the database
      * 
-     * @param {City} cityObject - structured city object
      * @param {Array} newJobs - array of new jobs
      * 
      * @returns
      */
-    public static async saveJobs(cityObject: City, newJobs: any) {
-        // console.log(cityObject, newJobs)
+    public static async saveJobs(newJobs: any) {
+        // console.log(newJobs)
 
         for (let i = 0; i < newJobs.length; i++) {
             const newJob = newJobs[i]
 
             const createOutput = await Job.create({
                 title: newJob.title,
-                grade: newJob.grade,
                 href: newJob.href,
-                city: cityObject.code
+                domain: newJob.domain,
+                grade: newJob.grade,
+                institution: newJob.institution,
+                location: newJob.location,
+                deadline: newJob.deadline,
+                position_type: env.POSITION_TYPE
             });
+        }
+    }
+
+    public static convertJobToCsv(job: any) {
+        return Object.values(job).join("|") + os.EOL;   //+ "\r\n";
+    }
+    
+    public static convertCsvToJob(csvLine: string) {
+        const splitOutput = csvLine.split("|");
+
+        return {
+            "title": splitOutput[0],
+            "href": splitOutput[1],
+            "domain": splitOutput[2],
+            "grade": splitOutput[3],
+            "institution": splitOutput[4],
+            "location": splitOutput[5],
+            "deadline": splitOutput[6],
         }
     }
 }
@@ -70,22 +93,41 @@ Job.init({
         allowNull: false
         // allowNull defaults to true
     },
-    grade: {
-        comment: 'Job grade as it was mentioned on the EPSO website',
-        type: DataTypes.STRING,
-        allowNull: false
-        // allowNull defaults to true
-    },
     href: {
         type: DataTypes.STRING,
         allowNull: false
         // allowNull defaults to true
     },
-    city: {
-        comment: 'City code taken from the cities enum',
+    domain: {
+        comment: 'Job domain(s)',
         type: DataTypes.STRING,
         allowNull: false
         // allowNull defaults to true
+    },
+    grade: {
+        comment: 'Job grade(s): AST 4, AD 6, FG IV, ...',
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    institution: {
+        comment: 'Institution/EU body',
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    location: {
+        comment: 'Location string with country in brackets: Brussels (Belgium), Valletta (Malta), ...',
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    deadline: {
+        comment: 'Deadline string in format dd/mm/yyy - HH:mm',
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    position_type: {
+        comment: 'Position type: permanent_staff, temp, cast, seconded, ...',
+        type: DataTypes.STRING,
+        allowNull: false
     }
 }, {
     // Other model options go here

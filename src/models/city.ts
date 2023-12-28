@@ -61,15 +61,19 @@ City.init({
         // allowNull defaults to true
     },
     name: {
-        comment: 'City name as it was mentioned on the EPSO website',
+        comment: 'City name only',
         type: DataTypes.STRING,
         allowNull: false
-        // allowNull defaults to true
     },
     country: {
-        comment: 'City country as it was mentioned on the EPSO website',
+        comment: 'City country only',
         type: DataTypes.STRING
-    }
+    },
+    display_name: {
+        comment: 'Location name as it was mentioned on the EPSO website in the select',
+        type: DataTypes.STRING,
+        allowNull: false
+    },
 }, {
     // Other model options go here
     sequelize: sequelizeInstance,         // the connection instance

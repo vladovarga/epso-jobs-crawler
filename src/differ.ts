@@ -2,12 +2,12 @@
 // https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/clients/client-s3/modules.html
 
 console.log('Loading differ');
-
+const os = require("os");
 const Diff = require('diff');
 
 import { env } from './env'
-import { City } from './models/city'
 import { s3ClientInstance } from './inits/s3'
+import { Job } from './models/job'
 
 import { GetObjectCommand, CopyObjectCommand } from "@aws-sdk/client-s3";
 
@@ -40,16 +40,14 @@ class DifferClass {
     /**
      * Diffs job positions from the latest and previous job crawl
      * 
-     * @param {City} cityObject - structured city object
-     * 
      * @returns
      */
-    public async diffCity(cityObject: City) {
+    public async diff() {
         // read latest.txt from this cron run
 
         const getCommand = new GetObjectCommand({
             Bucket: env.AWS_BUCKET,
-            Key: cityObject.code + "/" + env.LATEST_FILE_NAME
+            Key: env.POSITION_TYPE + "/"  + env.LATEST_FILE_NAME
         });
 
         const getResponse = await s3ClientInstance.send(getCommand);
@@ -67,7 +65,7 @@ class DifferClass {
         // read previous.txt from previous cron run
         const getCommand2 = new GetObjectCommand({
             Bucket: env.AWS_BUCKET,
-            Key: cityObject.code + "/" + env.PREVIOUS_FILE_NAME
+            Key: env.POSITION_TYPE + "/" + env.PREVIOUS_FILE_NAME
         });
 
         let getResponse2
@@ -81,17 +79,17 @@ class DifferClass {
                 // create a copy of latest.txt into previous.txt
                 console.log('Copying file into previous.txt')
                         
-                console.time("copying-" + cityObject.code + "-latest.txt")
+                console.time("copying-latest.txt")
 
                 const copyCommand = new CopyObjectCommand({
                     Bucket: env.AWS_BUCKET, 
-                    CopySource: env.AWS_BUCKET + "/" + cityObject.code + "/" + env.LATEST_FILE_NAME,
-                    Key: cityObject.code + "/" + env.PREVIOUS_FILE_NAME
+                    CopySource: env.AWS_BUCKET + "/" + env.POSITION_TYPE + "/" + env.LATEST_FILE_NAME,
+                    Key: env.POSITION_TYPE + "/" + env.PREVIOUS_FILE_NAME
                 })
                 
                 s3ClientInstance.send(copyCommand)
 
-                console.timeEnd("copying-" + cityObject.code + "-latest.txt")
+                console.timeEnd("copying-latest.txt")
 
                 console.log('Copying successful')
 
@@ -114,8 +112,8 @@ class DifferClass {
 
         // sort alphabetically
 
-        const previousSorted = previous.split(/\n/).sort().join('\n');
-        const latestSorted = latest.split(/\n/).sort().join('\n');
+        const previousSorted = previous.split(os.EOL).sort().join(os.EOL);
+        const latestSorted = latest.split(os.EOL).sort().join(os.EOL);
 
         // console.log("previousSorted", previousSorted);
         // console.log("latestSorted", latestSorted);
@@ -140,22 +138,11 @@ class DifferClass {
         for (const addedObject of onlyAdded) {
             if (addedObject.count == 1) {
                 // if the count is 1 => return just the value
-                const splitOutput = addedObject.value.split("|");
-                result.push({
-                    "title": splitOutput[0],
-                    "grade": splitOutput[1],
-                    "href": splitOutput[2]
-                    
-                });
+                result.push(Job.convertCsvToJob(addedObject.value))
             } else if (addedObject.count > 1) {
                 // if the count is > 1 => split the value by new line 
-                addedObject.value.split("\n").forEach(function(opportunity: string) {
-                    const splitOutput = opportunity.split("|");
-                    result.push({
-                        "title": splitOutput[0],
-                        "grade": splitOutput[1],
-                        "href": splitOutput[2]
-                    });
+                addedObject.value.split(os.EOL).forEach(function(opportunity: string) {
+                    result.push(Job.convertCsvToJob(opportunity))
                 });
             }
         }

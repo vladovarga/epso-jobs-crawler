@@ -6,15 +6,13 @@ services:
       # define your own environment variables via .env file
 
       URL_TO_CRAWL: ${URL_TO_CRAWL}
+      POSITION_TYPE: ${POSITION_TYPE}
 
       # AWS
       AWS_REGION: ${AWS_REGION}
       AWS_BUCKET: ${AWS_BUCKET}
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
-
-      # where the raw downloaded .html files will be stored
-      DOWNLOADS_PATH: ${DOWNLOADS_PATH}
 
       # Postgres DB settings
       PG_HOST: ${PG_HOST}

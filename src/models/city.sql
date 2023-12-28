@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS public.cities
     code text NOT NULL,
     name text NOT NULL,
     country text,
+    display_name text NOT NULL,
     CONSTRAINT cities_pkey PRIMARY KEY (id),
     CONSTRAINT cities_code_ukey UNIQUE (code)
 );

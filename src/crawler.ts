@@ -6,23 +6,14 @@ console.log('Loading crawler');
 const { JSDOM } = require("jsdom")
 const https = require('https');
 
-// const { REGION, BUCKET, DOWNLOADS_PATH, URL_OBJECT, LATEST_FILE_NAME, CITY_SEARCH_PARAM_KEY } = require('./env');
-
 import { env } from './env'
-import { City } from './models/city'
 import { s3ClientInstance } from './inits/s3'
+import { Job } from './models/job'
 
-import { CopyObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
 
-// where are the jobs located in the html source code
-const JOBS_TITLE_SELECTOR = "td.views-field-title > a";
-const GRADES_SELECTOR = "td.views-field-field-epso-grade";
-
-// key of the parameter in the URL that contains the city ID
-const CITY_SEARCH_PARAM_KEY = "field_epso_location_target_id_1"
-
-// this text can be found in the body if there are no jobs available
-const NO_JOBS_TEXT = "Sorry, there are no jobs"
+// key in URL for pagination
+const URL_PAGE_PARAM_KEY = "page"
 
 class CrawlerClass {
     /**
@@ -51,26 +42,157 @@ class CrawlerClass {
     // constructor() {}
 
     /**
-     * Crawls one particular city for currently available jobs
+     * Crawls one particular URL for currently available jobs
      * and stores the result in a file in AWS S3 bucket
-     * 
-     * @param {City} cityObject - structured city object
      * 
      * @returns
      */
-    public async crawlCity(cityObject: City) {
-        return new Promise((resolve, reject) => {
-
-            env.URL_OBJECT.searchParams.set(CITY_SEARCH_PARAM_KEY, cityObject.id.toString())
+    public async crawlUrl() : Promise<boolean> {
+        return new Promise(async (resolve, reject) => {
+            // iterator for pagination
+            let page_id = 0
+            // flag to indicate if there are more pages to be crawled
+            let contains_more_results = true
             
-            console.log("Crawling URL", env.URL_OBJECT.toString())
-                    
-            // start a GET request for URL_OBJECT
+            // array of objects
+            let result: { title: any; grade: any; href: any; domain: any; institution: any; location: any; deadline: any; }[] = []
 
-            https.get(env.URL_OBJECT, async (response: any) => {
+            while (contains_more_results && page_id <= 100) {
+                let body = await this._crawlPage(page_id)
+
+                console.log('Preparing to parse job list')
+
+                if (!this._containsJobs(body)) {
+                    console.log('No jobs text found => skipping parsing via jsdom')
+                    break
+                }
+
+                console.time("initializing-jsdom")
+
+                const dom = new JSDOM(body)
+                
+                console.timeEnd("initializing-jsdom")
+                
+                console.time("parsing")
+
+                dom.window.document.querySelectorAll("table tbody tr").forEach(function(row: any, index: any) {
+                    // iterate over the table rows
+
+                    // pick the title with the link
+                    let title = row.querySelector(".views-field-title > a")
+
+                    // pick the rest of the data
+                    let domain = row.querySelector(".views-field-field-epso-domain").textContent.trim()
+                    let grade = row.querySelector(".views-field-field-epso-grade").textContent.trim()
+                    let institution = row.querySelector(".views-field-field-dgnew, .views-field-field-epso-institution").textContent.trim()
+                    let location = row.querySelector(".views-field-field-epso-location").textContent.trim()
+                    let deadline = row.querySelector(".views-field-field-epso-deadline").textContent.trim()
+
+                    result.push({
+                        "title": title.text,
+                        "href": title.href,
+                        "domain": domain,
+                        "grade": grade,
+                        "institution": institution,
+                        "location": location,
+                        "deadline": deadline
+                    })
+                });
+
+                console.timeEnd("parsing");
+                console.log('Parsing successful')
+
+                if (!this._containsNextPageLink(dom)) {
+                    console.log('No next page link found => stopping pagination')
+                    contains_more_results = false
+                }
+
+                page_id++
+            }
+
+            if (page_id == 100) {
+                console.error("There are more than 100 pages of results!")
+            }
+
+            // plain text list result
+            let jobList = ""
+
+            // convert result to plain text list
+            result.forEach(function(job: any) {
+                // join object values into a string separated by |
+                jobList += Job.convertJobToCsv(job)
+            });
+
+            // write down list of current job opportunities into latest.txt
+
+            console.log('Writing job list to:', env.LATEST_FILE_NAME)
+            
+            console.time("saving-" + env.LATEST_FILE_NAME)
+
+            const putCommand = new PutObjectCommand({
+                Bucket: env.AWS_BUCKET,
+                Key:  env.POSITION_TYPE + "/" + env.LATEST_FILE_NAME, 
+                Body: jobList
+            })
+
+            await s3ClientInstance.send(putCommand).then((data: any) => {
+                // process data.
+                console.log('The latest.txt file has been saved!')
+            }).catch((error: any) => {
+                // error handling.
+                console.error('The latest.txt could not be saved!', error)
+            })
+
+            console.timeEnd("saving-" + env.LATEST_FILE_NAME)
+            
+            // promise resolved on success
+            resolve(true)
+        })
+    }
+
+    /**
+     * Crawls a page with the given page_id and returns the response as a string.
+     * @param page_id The ID of the page to crawl.
+     * @returns A promise that resolves to the response as a string.
+     */
+    async _crawlPage(page_id: number): Promise<string> {
+        env.URL_OBJECT.searchParams.set(URL_PAGE_PARAM_KEY, page_id.toString())
+        
+        console.log("Crawling URL", env.URL_OBJECT.toString())
+
+        // start a GET request for URL_OBJECT
+        return await this._httpsGet(env.URL_OBJECT.toString())
+    }
+
+    /**
+     * Checks if the provided body contains jobs.
+     * @param body - The body to check.
+     * @returns True if the body contains no jobs, false otherwise.
+     */
+    _containsJobs(body: string): boolean {
+        // has to be searched as text to avoid parsing (parsing takes too long)
+        return body.includes("</table>")
+    }
+
+    /**
+     * Checks if the provided DOM contains the Next page link.
+     * @param dom - The DOM to check.
+     * @returns True if the body contains the Next page link, false otherwise.
+     */
+    _containsNextPageLink(dom: any): boolean {
+        return dom.window.document.querySelector(".ecl-pagination__item--next")
+    }
+
+    /**
+     * Performs an HTTPS GET request to the specified URL and returns the response body as a string.
+     * @param url - The URL to send the GET request to.
+     * @returns A Promise that resolves with the response body as a string.
+     */
+    async _httpsGet(url: string): Promise<string> {
+        return new Promise<string>((resolve, reject) => {
+            https.get(url, async (response: any) => {
                 // console.log('statusCode:', response.statusCode)
                 // console.log('headers:', response.headers)
-
                 if (response.statusCode != 200) {
                     const message = "Request didn't finish with 200 reponse code!"
                     console.error(message, response.statusCode)
@@ -78,125 +200,14 @@ class CrawlerClass {
                     // reject(error);
                     throw new Error(message)
                 }
-
+                
                 console.log('Reponse code was:', response.statusCode)
-
-                let body = ""
-
-                response.on('data', (chunk: any) => {
-                    // build up data chunk by chunk
-                    body += chunk
-                })
-                            
-                response.on('end', async () => {
-                    console.log('Reponse end reached');
-                    // console.log(body)
-                    
-                    // generate fileName from today's date + .html
-                    let fileName = cityObject.code + "-" + new Date().toISOString() + '.html'
-
-                    // write down the response body into a .html file
-
-                    console.log('Writing file into:', env.DOWNLOADS_PATH + fileName)
-                    
-                    console.time("saving-" + fileName)
-
-                    const putCommand = new PutObjectCommand({
-                        Bucket: env.AWS_BUCKET, 
-                        Key: env.DOWNLOADS_PATH + fileName, 
-                        Body: body
-                    })           
-
-                    s3ClientInstance.send(putCommand).then((data: any) => {
-                        console.log('Writing successful')
-
-                        // create a copy of just downloaded file into latest.html
-                        console.log('Copying file into latest.html')
-                        
-                        console.time("copying-"+fileName)
-
-                        const copyCommand = new CopyObjectCommand({
-                            Bucket: env.AWS_BUCKET, 
-                            CopySource: env.AWS_BUCKET + "/" + env.DOWNLOADS_PATH + fileName,
-                            Key: cityObject.code + "/" + 'latest.html'
-                        })
-                        
-                        s3ClientInstance.send(copyCommand)
-
-                        console.timeEnd("copying-"+fileName)
-
-                        console.log('Copying successful')
-                    }).catch((error: any) => {
-                        // error handling.
-                        console.error("There was an error saving the lastest html file!", error)
-                    })
-
-                    console.timeEnd("saving-"+fileName)                
-
-                    // let's parse latest.html as DOM
-                    
-                    console.log('Preparing to parse job list')
-                    
-                    let jobList = ""           // plain text list
-                    // let result = []            // array of objects
-
-                    if (body.includes(NO_JOBS_TEXT)) {
-                        console.log('No jobs text found => skipping parsing via jsdom')
-                    } else {
-                        console.time("initializing-jsdom")
-
-                        const dom = new JSDOM(body)
-                        
-                        console.timeEnd("initializing-jsdom")
-        
-                        // find all the <a> tags containing a job title
-                        
-                        console.time("parsing")
-                        
-                        let grades = dom.window.document.querySelectorAll(GRADES_SELECTOR)
-
-                        dom.window.document.querySelectorAll(JOBS_TITLE_SELECTOR).forEach(function(a: any, index: any) {
-                            jobList += a.text + "|" + grades[index].textContent.trim() + "|" + a.href + "\n";
-                            // result.push({
-                            //     "title": a.text,
-                            //     "grade": grades[index].textContent.trim(),
-                            //     "href": a.href,
-                            // })
-                        });
-
-                        console.timeEnd("parsing");
-                        console.log('Parsing successful')
-                    }
-
-                    // write down list of current job opportunities into latest.txt
-
-                    console.log('Writing job list to:', env.LATEST_FILE_NAME)
-                    
-                    console.time("saving-" + env.LATEST_FILE_NAME)
-
-                    const putCommand2 = new PutObjectCommand({
-                        Bucket: env.AWS_BUCKET,
-                        Key:  cityObject.code + "/" + env.LATEST_FILE_NAME, 
-                        Body: jobList
-                    })
-
-                    await s3ClientInstance.send(putCommand2).then((data: any) => {
-                        // process data.
-                        console.log('The latest.txt file has been saved!')
-                    })
-                    .catch((error: any) => {
-                        // error handling.
-                        console.error('The latest.txt could not be saved!', error)
-                    })
-
-                    console.timeEnd("saving-" + env.LATEST_FILE_NAME)
-
-                    // promise resolved on success
-                    resolve(true)
-                })
-            }).on('error', async (e: any) => {
-                console.error(e)
-            })
+    
+                response.setEncoding('utf8');
+                let body = ''; 
+                response.on('data', (chunk: string) => body += chunk);
+                response.on('end', () => resolve(body));
+            }).on('error', reject);
         })
     }
 }

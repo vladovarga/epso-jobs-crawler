@@ -14,13 +14,31 @@ if (typeof(process.env.PG_DATABASE) !== 'string' || typeof(process.env.PG_USERNA
     throw new Error(errorMessage)
 }
 
+// string enum for position types
+enum PositionTypes {
+    "permanent_staff",
+    "ec_vacancies",
+    "temp",
+    "cast",
+    "seconded",
+    "others"
+}
+
+if (typeof(process.env.POSITION_TYPE) !== 'string' || !Object.values(PositionTypes).includes(process.env.POSITION_TYPE)) {
+    const errorMessage = "POSITION_TYPE is not defined properly!"
+    console.error(errorMessage, process.env.POSITION_TYPE)
+    throw new Error(errorMessage)
+}
+
+// console.log("At the end of env")
+
 let env = {
     AWS_REGION: process.env.AWS_REGION,
     AWS_BUCKET: process.env.AWS_BUCKET,
 
     URL_TO_CRAWL: process.env.URL_TO_CRAWL,
     URL_OBJECT: new URL(process.env.URL_TO_CRAWL),
-    DOWNLOADS_PATH: process.env.DOWNLOADS_PATH,
+    POSITION_TYPE: process.env.POSITION_TYPE,
 
     LATEST_FILE_NAME: "latest.txt",
     PREVIOUS_FILE_NAME: "previous.txt",
