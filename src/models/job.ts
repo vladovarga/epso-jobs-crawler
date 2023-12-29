@@ -2,7 +2,7 @@ const os = require("os");
 
 import { DataTypes, Model } from 'sequelize';
 import { sequelizeInstance } from '../inits/sequelize'
-import { env } from '../env'
+import { env, PositionTypes } from '../env'
 
 export class Job extends Model {
     /**
@@ -37,7 +37,7 @@ export class Job extends Model {
      * 
      * @returns
      */
-    public static async saveJobs(newJobs: any) {
+    public static async saveJobs(newJobs: any, POSITION_TYPE: PositionTypes) {
         // console.log(newJobs)
 
         for (let i = 0; i < newJobs.length; i++) {
@@ -51,7 +51,7 @@ export class Job extends Model {
                 institution: newJob.institution,
                 location: newJob.location,
                 deadline: newJob.deadline,
-                position_type: env.POSITION_TYPE
+                position_type: POSITION_TYPE
             });
         }
     }

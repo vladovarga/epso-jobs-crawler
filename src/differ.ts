@@ -5,7 +5,7 @@ console.log('Loading differ');
 const os = require("os");
 const Diff = require('diff');
 
-import { env } from './env'
+import { env, PositionTypes } from './env'
 import { s3ClientInstance } from './inits/s3'
 import { Job } from './models/job'
 
@@ -42,12 +42,12 @@ class DifferClass {
      * 
      * @returns
      */
-    public async diff() {
+    public async diff(POSITION_TYPE: PositionTypes) {
         // read latest.txt from this cron run
 
         const getCommand = new GetObjectCommand({
             Bucket: env.AWS_BUCKET,
-            Key: env.POSITION_TYPE + "/"  + env.LATEST_FILE_NAME
+            Key: POSITION_TYPE + "/"  + env.LATEST_FILE_NAME
         });
 
         const getResponse = await s3ClientInstance.send(getCommand);
@@ -65,7 +65,7 @@ class DifferClass {
         // read previous.txt from previous cron run
         const getCommand2 = new GetObjectCommand({
             Bucket: env.AWS_BUCKET,
-            Key: env.POSITION_TYPE + "/" + env.PREVIOUS_FILE_NAME
+            Key: POSITION_TYPE + "/" + env.PREVIOUS_FILE_NAME
         });
 
         let getResponse2
@@ -83,8 +83,8 @@ class DifferClass {
 
                 const copyCommand = new CopyObjectCommand({
                     Bucket: env.AWS_BUCKET, 
-                    CopySource: env.AWS_BUCKET + "/" + env.POSITION_TYPE + "/" + env.LATEST_FILE_NAME,
-                    Key: env.POSITION_TYPE + "/" + env.PREVIOUS_FILE_NAME
+                    CopySource: env.AWS_BUCKET + "/" + POSITION_TYPE + "/" + env.LATEST_FILE_NAME,
+                    Key: POSITION_TYPE + "/" + env.PREVIOUS_FILE_NAME
                 })
                 
                 s3ClientInstance.send(copyCommand)

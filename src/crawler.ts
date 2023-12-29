@@ -6,7 +6,7 @@ console.log('Loading crawler');
 const { JSDOM } = require("jsdom")
 const https = require('https');
 
-import { env } from './env'
+import { env, PositionTypes } from './env'
 import { s3ClientInstance } from './inits/s3'
 import { Job } from './models/job'
 
@@ -45,9 +45,13 @@ class CrawlerClass {
      * Crawls one particular URL for currently available jobs
      * and stores the result in a file in AWS S3 bucket
      * 
+     * @param urlToCrawl The URL to crawl. optional
+     * 
      * @returns
      */
-    public async crawlUrl() : Promise<boolean> {
+    public async crawlUrl(urlToCrawl: string, POSITION_TYPE: PositionTypes) : Promise<boolean> {
+        let urlObjectToCrawl: URL = new URL(urlToCrawl)
+
         return new Promise(async (resolve, reject) => {
             // iterator for pagination
             let page_id = 0
@@ -58,7 +62,7 @@ class CrawlerClass {
             let result: { title: any; grade: any; href: any; domain: any; institution: any; location: any; deadline: any; }[] = []
 
             while (contains_more_results && page_id <= 100) {
-                let body = await this._crawlPage(page_id)
+                let body = await this._crawlPage(urlObjectToCrawl, page_id)
 
                 console.log('Preparing to parse job list')
 
@@ -131,7 +135,7 @@ class CrawlerClass {
 
             const putCommand = new PutObjectCommand({
                 Bucket: env.AWS_BUCKET,
-                Key:  env.POSITION_TYPE + "/" + env.LATEST_FILE_NAME, 
+                Key:  POSITION_TYPE + "/" + env.LATEST_FILE_NAME, 
                 Body: jobList
             })
 
@@ -152,16 +156,19 @@ class CrawlerClass {
 
     /**
      * Crawls a page with the given page_id and returns the response as a string.
+     * 
+     * @param urlObjectToCrawl The URL (as object) to crawl.
      * @param page_id The ID of the page to crawl.
+     * 
      * @returns A promise that resolves to the response as a string.
      */
-    async _crawlPage(page_id: number): Promise<string> {
-        env.URL_OBJECT.searchParams.set(URL_PAGE_PARAM_KEY, page_id.toString())
+    async _crawlPage(urlObjectToCrawl: URL, page_id: number): Promise<string> {
+        urlObjectToCrawl.searchParams.set(URL_PAGE_PARAM_KEY, page_id.toString())
         
-        console.log("Crawling URL", env.URL_OBJECT.toString())
+        console.log("Crawling URL", urlObjectToCrawl.toString())
 
         // start a GET request for URL_OBJECT
-        return await this._httpsGet(env.URL_OBJECT.toString())
+        return await this._httpsGet(urlObjectToCrawl.toString())
     }
 
     /**
