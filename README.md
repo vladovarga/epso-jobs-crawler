@@ -19,13 +19,13 @@ Based on the previously mentioned, the prerequisites are:
 ## Deployment
 
 ### Docker + AWS Lambda
-One possibility is to build the docker image and deploy it as-is in AWS Lambda (dockerfile is already adjusted to be extended from lambda nodejs image) and be triggered at regular intervals to crawl the EPSO website for new vacancies.
+One possibility is to build the docker image and deploy it as-is in AWS Lambda (dockerfile is already adjusted to be extended from lambda nodejs image) and be triggered at regular intervals to crawl the EPSO website for new vacancies. The triggering events have to hold a `detail` property (explained below) with `URL_TO_CRAWL` and `POSITION_TYPE`
 
 ### As script
 Another possibility would be to run the script as is. In that case:
-1. modification in the `index` is necessary - specially the commented part at the end that would actually trigger the function
+1. modification in the `index` is necessary - specially the commented part at the end that would actually trigger the function. Or some sort of wrapper needs to be implemented.
 1. then the code needs to be built from .ts -> .js (`npm run build`)
-1. code can be run - for example via `npm run start`
+1. code can be run - for example via `npm run start` (or accessing the wrapper from first step)
 
 ## Configuration
 
@@ -33,9 +33,6 @@ Crawler has to be configured via environment variables. They are all mandatory, 
 
 | Config Parameter          |  Description                                                  |
 | ------------------------- | ------------------------------------------------------------- |
-| `URL_TO_CRAWL`            | URL to be crawled. Should look like https://eu-careers.europa.eu/en/job-opportunities/open-vacancies/xxx
-| `POSITION_TYPE`           | Represents the sub-section on the EPSO website. The value corresponds to the last part of the URL (except for the permanent_staff). It is an enum. Allowed values are: permanent_staff, ec_vacancies, temp, cast, seconded, others |
-|   |   |
 | `AWS_REGION`              | Amazon region used for the S3 service                         |
 | `AWS_BUCKET`              | Amazon S3 bucket to store the plain text files in             |
 | `AWS_ACCESS_KEY_ID`       | Amazon access key ID                                          |
@@ -45,6 +42,20 @@ Crawler has to be configured via environment variables. They are all mandatory, 
 | `PG_DATABASE`             | PostgreSQL database name                                      |
 | `PG_USERNAME`             | PostgreSQL username                                           |
 | `PG_PASSWORD`             | PostgreSQL password                                           |
+
+There are 2 more parameters necessary for a successful crawl run. But these are expected to arrive in the `detail` property of the event that is triggered by some Amazon trigger. Example piece of JSON:
+```
+        ...
+        "detail": { 
+             "URL_TO_CRAWL": "https://eu-careers.europa.eu/en/job-opportunities/open-vacancies/cast", 
+             "POSITION_TYPE": "cast" 
+        },
+        ...
+```
+
+Where the 2 input parameters are:
+* `URL_TO_CRAWL` - URL to be crawled. Should look like `https://eu-careers.europa.eu/en/job-opportunities/open-vacancies/{xxx}` where the `{xxx}` represents the position type
+* `POSITION_TYPE` - Represents the sub-section on the EPSO website. The value corresponds to the last part of the URL (except for the permanent_staff). It is an enum. Allowed values are: `permanent_staff`, `ec_vacancies`, `temp`, `cast`, `seconded`, `others`
 
 ## Database structure
 
