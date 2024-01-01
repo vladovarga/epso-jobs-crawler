@@ -10,7 +10,7 @@ const { CopyObjectCommand } = require("@aws-sdk/client-s3"); // CommonJS
 
 // console.log(env);
 export const handler = async (event: ScheduledEvent, context?: Context): Promise<APIGatewayProxyResult> => {
-    console.log(`Event: ${JSON.stringify(event, null, 2)}`)
+    // console.log(`Event: ${JSON.stringify(event, null, 2)}`)
     // console.log(`Context: ${JSON.stringify(context, null, 2)}`)
 
     // check the event input
@@ -57,10 +57,12 @@ export const handler = async (event: ScheduledEvent, context?: Context): Promise
     console.timeEnd("diff")
 
     if (!diffOutput) {
+        console.timeEnd("overall-execution-time")
         const message = "There was an error while comparing differences!"
         console.error(message, diffOutput)
         throw new Error(message)
     } else if (diffOutput.length == 0) {
+        console.timeEnd("overall-execution-time")
         console.log("There were no new job opportunities")
         return returnStatusCodeResponse(200, "There were no new job opportunities")
     } else if (diffOutput.length > 0) {
@@ -102,7 +104,7 @@ function returnStatusCodeResponse(statusCode: number, message: string): any {
 };
 
 // (async function () {
-// example event representing the AWS EventBridge event
+// // example event representing the AWS EventBridge event
 //     let event: ScheduledEvent = {
 //         "version": "0",
 //         "account": "123456789012",
