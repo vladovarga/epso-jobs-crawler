@@ -130,3 +130,4 @@ dist
 .pnp.*
 
 push_to_aws.sh
+aws-build.sh
