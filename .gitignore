@@ -129,5 +129,4 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
-push_to_aws.sh
 aws-build.sh

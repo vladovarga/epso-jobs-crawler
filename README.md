@@ -2,7 +2,7 @@
 
 ## What is EPSO?
 
-EPSO is an acronym that stands for *Eropean Personnel Selection Office*, and in brief they are responsible for hiring people that want to work for the European institutions. More can be read here [https://eu-careers.europa.eu/en](https://eu-careers.europa.eu/en)
+EPSO is an acronym that stands for *European Personnel Selection Office*, and in brief they are responsible for hiring people that want to work for the European institutions. More can be read here [https://eu-careers.europa.eu/en](https://eu-careers.europa.eu/en)
 
 Part of their website is also the open vacancies list, which can be found here [https://eu-careers.europa.eu/en/job-opportunities/open-vacancies](https://eu-careers.europa.eu/en/job-opportunities/open-vacancies). This list is the subject of this crawler.
 
@@ -59,4 +59,4 @@ Where the 2 input parameters are:
 
 ## Database structure
 
-Crawler needs at least 2 tables to be present - `cities` and `jobs`. SQL CREATE scripts can be found for both in the [src/models/](src/models/) subfolder
+Crawler needs at least 1 table to be present - `jobs`. SQL CREATE scripts can be found in the [src/models/](src/models/) subfolder
