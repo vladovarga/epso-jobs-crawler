@@ -59,4 +59,4 @@ Where the 2 input parameters are:
 
 ## Database structure
 
-Crawler needs at least 2 tables to be present - `cities` and `jobs`. SQL CREATE scripts can be found for both in the [src/models/](src/models/) subfolder
+Crawler needs at least 1 table to be present - `jobs`. SQL CREATE scripts can be found in the [src/models/](src/models/) subfolder
