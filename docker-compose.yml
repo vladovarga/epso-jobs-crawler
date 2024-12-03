@@ -14,6 +14,7 @@ services:
       # Postgres DB settings
       # PG_HOST: host.docker.internal
       PG_HOST: ${PG_HOST}
+      PG_PORT: ${PG_PORT}
       PG_DATABASE: ${PG_DATABASE}
       PG_USERNAME: ${PG_USERNAME}
       PG_PASSWORD: ${PG_PASSWORD}
