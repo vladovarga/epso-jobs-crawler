@@ -104,15 +104,39 @@ function returnStatusCodeResponse(statusCode: number, message: string): any {
 };
 
 // (async function () {
-// // example event representing the AWS EventBridge event
+//     const possibleEventDetails = [
+//         { 
+//             "URL_TO_CRAWL": "https://eu-careers.europa.eu/en/job-opportunities/open-vacancies/temp", 
+//             "POSITION_TYPE": "temp" 
+//         },
+//         { 
+//             "URL_TO_CRAWL": "https://eu-careers.europa.eu/en/job-opportunities/open-vacancies/cast", 
+//             "POSITION_TYPE": "cast" 
+//         },
+//         { 
+//             "URL_TO_CRAWL": "https://eu-careers.europa.eu/en/job-opportunities/open-vacancies/seconded", 
+//             "POSITION_TYPE": "seconded" 
+//         },
+//         { 
+//             "URL_TO_CRAWL": "https://eu-careers.europa.eu/en/job-opportunities/open-vacancies/others", 
+//             "POSITION_TYPE": "others" 
+//         },
+//         { 
+//             "URL_TO_CRAWL": "https://eu-careers.europa.eu/en/job-opportunities/open-vacancies/ec_vacancies", 
+//             "POSITION_TYPE": "ec_vacancies" 
+//         },
+//         { 
+//             "URL_TO_CRAWL": "https://eu-careers.europa.eu/en/job-opportunities/open-vacancies", 
+//             "POSITION_TYPE": "permanent_staff" 
+//         }
+//     ]
+
+//     // example event representing the AWS EventBridge event
 //     let event: ScheduledEvent = {
 //         "version": "0",
 //         "account": "123456789012",
 //         "region": "us-east-2",
-//         "detail": { 
-//             "URL_TO_CRAWL": "https://eu-careers.europa.eu/en/job-opportunities/open-vacancies/cast", 
-//             "POSITION_TYPE": "cast" 
-//         },
+//         "detail": "will-be-overwritten",
 //         "detail-type": "Scheduled Event",
 //         "source": "aws.events",
 //         "time": "2019-03-01T01:23:45Z",
@@ -121,6 +145,9 @@ function returnStatusCodeResponse(statusCode: number, message: string): any {
 //           "arn:aws:events:us-east-2:123456789012:rule/my-schedule"
 //         ]
 //     }
-
-//     await handler(event)
+    
+//     for (let i = 0; i < possibleEventDetails.length-1; i++) {
+//         event.detail =  possibleEventDetails[i]
+//         await handler(event)
+//     }
 // }) ()
