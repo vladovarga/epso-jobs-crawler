@@ -95,6 +95,9 @@ export const handler = async (event: ScheduledEvent, context?: Context): Promise
 }
 
 function returnStatusCodeResponse(statusCode: number, message: string): any {
+    // connection is not being close to save execution time - otherwise there would need to be "await" everywhere
+    // sequelizeInstance.close()
+
     return {
         statusCode: statusCode,
         body: JSON.stringify({
@@ -103,6 +106,7 @@ function returnStatusCodeResponse(statusCode: number, message: string): any {
     }
 };
 
+// uncomment to run locally as script
 // (async function () {
 //     const possibleEventDetails = [
 //         { 
