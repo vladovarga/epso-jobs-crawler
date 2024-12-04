@@ -1,4 +1,4 @@
-FROM public.ecr.aws/lambda/nodejs:18 AS ts-builder
+FROM public.ecr.aws/lambda/nodejs:20 AS ts-builder
 
 WORKDIR /app
 COPY . .
@@ -10,7 +10,7 @@ RUN npm run build
 
 ### second stage build starting here ###
 
-FROM public.ecr.aws/lambda/nodejs:18 AS final
+FROM public.ecr.aws/lambda/nodejs:20 AS final
 
 # WORKDIR /app
 WORKDIR ${LAMBDA_TASK_ROOT}

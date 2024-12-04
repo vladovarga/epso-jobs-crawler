@@ -39,6 +39,7 @@ Crawler has to be configured via environment variables. They are all mandatory, 
 | `AWS_SECRET_ACCESS_KEY`   | Amazon secret access key                                      |
 |   |   |
 | `PG_HOST`                 | PostgreSQL hostname                                           |
+| `PG_PORT`                 | PostgreSQL port                                               |
 | `PG_DATABASE`             | PostgreSQL database name                                      |
 | `PG_USERNAME`             | PostgreSQL username                                           |
 | `PG_PASSWORD`             | PostgreSQL password                                           |

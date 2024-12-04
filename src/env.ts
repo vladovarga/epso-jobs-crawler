@@ -28,6 +28,7 @@ let env = {
     PREVIOUS_FILE_NAME: "previous.txt",
 
     PG_HOST: process.env.PG_HOST,
+    PG_PORT: 5432,
     PG_DATABASE: process.env.PG_DATABASE,
     PG_USERNAME: process.env.PG_USERNAME,
     PG_PASSWORD: process.env.PG_PASSWORD,
@@ -37,6 +38,10 @@ let env = {
 
         return (positionType in keys)
     }
+}
+
+if (process.env.PG_PORT) {
+    env["PG_PORT"] = parseInt(process.env.PG_PORT)
 }
 
 // console.log(env);
