@@ -87,10 +87,13 @@ class CrawlerClass {
 
                     // pick the rest of the data
                     let domain = row.querySelector(".views-field-field-epso-domain").textContent.trim()
-                    let grade = row.querySelector(".views-field-field-epso-grade").textContent.trim()
                     let institution = row.querySelector(".views-field-field-dgnew, .views-field-field-epso-institution").textContent.trim()
                     let location = row.querySelector(".views-field-field-epso-location").textContent.trim()
                     let deadline = row.querySelector(".views-field-field-epso-deadline").textContent.trim()
+                    
+                    // check if grade is present (not every page has one ('others' does not have it anymore))
+                    let gradeElement = row.querySelector(".views-field-field-epso-grade");
+                    let grade = gradeElement ? gradeElement.textContent.trim() : null;
 
                     result.push({
                         "title": title.text,

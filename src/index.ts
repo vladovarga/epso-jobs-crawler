@@ -130,7 +130,7 @@ function returnStatusCodeResponse(statusCode: number, message: string): any {
 //             "POSITION_TYPE": "ec_vacancies" 
 //         },
 //         { 
-//             "URL_TO_CRAWL": "https://eu-careers.europa.eu/en/job-opportunities/open-vacancies", 
+//             "URL_TO_CRAWL": "https://eu-careers.europa.eu/en/job-opportunities/open-vacancies/permanent", 
 //             "POSITION_TYPE": "permanent_staff" 
 //         }
 //     ]
@@ -150,7 +150,7 @@ function returnStatusCodeResponse(statusCode: number, message: string): any {
 //         ]
 //     }
     
-//     for (let i = 0; i < possibleEventDetails.length-1; i++) {
+//     for (let i = 0; i < possibleEventDetails.length; i++) {
 //         event.detail =  possibleEventDetails[i]
 //         await handler(event)
 //     }
