@@ -1,6 +1,6 @@
 {
   "name": "epso-jobs-crawler",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "description": "EPSO Jobs crawler - Crawling the EPSO jobs website regularly to catch any new openings",
   "main": "src/index.js",
   "scripts": {
@@ -30,17 +30,17 @@
   },
   "homepage": "https://github.com/vladovarga/epso-jobs-crawler#readme",
   "devDependencies": {
-    "@types/aws-lambda": "^8.10.147",
-    "dotenv": "^16.4.7",
+    "@types/aws-lambda": "^8.10.149",
+    "dotenv": "^16.5.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.3"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.758.0",
+    "@aws-sdk/client-s3": "^3.824.0",
     "diff": "^5.1.0",
     "jsdom": "^22.1.0",
-    "pg": "^8.13.3",
+    "pg": "^8.16.0",
     "pg-hstore": "^2.3.4",
-    "sequelize": "^6.37.5"
+    "sequelize": "^6.37.7"
   }
 }
